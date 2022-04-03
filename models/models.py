@@ -29,7 +29,7 @@ class Movimiento(Base):
     fecha = Column(DateTime, unique=False, index=True, default=datetime.datetime.utcnow())
     cuenta_id = Column(Integer, ForeignKey("cuentas.id"))
     cuenta = relationship("Cuenta", back_populates="movimientos")
-    movimiento_detalles = relationship("MovimientoDetalle", back_populates="movimiento")
+    movimiento_detalles = relationship("MovimientoDetalle", cascade="all,delete", backref="parent")
 
 
 class MovimientoDetalle(Base):
@@ -38,4 +38,4 @@ class MovimientoDetalle(Base):
     movimiento_id = Column(Integer, ForeignKey("movimientos.id"))
     tipo = Column(String, unique=False, index=False)
     importe = Column(Float)
-    movimiento = relationship("Movimiento", back_populates="movimiento_detalles")
+    movimiento = relationship("Movimiento", back_populates="movimiento_detalles",overlaps="parent")

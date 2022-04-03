@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+import time
 from models import models
 from schemas import schemas
 
@@ -25,6 +25,10 @@ def obtener_movimiento_por_id(db: Session, id_movimiento: int):
     return db.query(models.Movimiento).filter(models.Movimiento.id == id_movimiento).first()
 
 
+def obtener_movimiento_detalle_por_id(db: Session, id_movimiento_detalle: int):
+    return db.query(models.MovimientoDetalle).filter(models.MovimientoDetalle.id == id_movimiento_detalle).first()
+
+
 def eliminar_cliente_por_id(db: Session, id_cliente: int):
     para_borrar = db.query(models.Cliente).filter(models.Cliente.id == id_cliente).first()
     db.delete(para_borrar)
@@ -40,6 +44,13 @@ def eliminar_cuenta_por_id(db: Session, id_cuenta: int):
     db.delete(para_borrar)
     db.commit()
     return para_borrar
+
+
+def consultar_saldo_de_cuenta_cliente(db: Session, id_cuenta: int):
+    cuenta = obtener_cuenta_por_id(db=db, id_cuenta=id_cuenta)
+    return {
+        "saldo_disponible":cuenta.saldo_disponible
+    }
 
 
 def listar_cuentas(db: Session, skip: int = 0, limit: int = 100):
@@ -81,7 +92,7 @@ def crear_cuenta_a_cliente(db: Session, cta: schemas.CuentaRegister, id_cliente:
     return db_cuenta
 
 
-def realizar_operacion(db: Session, tipo_operacion: str, id_cuenta: int, saldo: float):
+def validar_operacion(db: Session, tipo_operacion: str, id_cuenta: int, saldo: float):
     if tipo_operacion.lower() == "ingreso":
         return sumar_saldo_a_cuenta(db=db, id_cuenta=id_cuenta, saldo=saldo)
     elif tipo_operacion.lower() == "egreso":
@@ -99,16 +110,44 @@ def obtener_cliente_por_nombre(db: Session, nombre_cliente: str):
 
 def crear_movimiento_a_cuenta(db: Session, mvm: schemas.MovimientoRegister,
                               mvmdetalle: schemas.MovimientoDetalleRegister, id_cuenta: int):
-    if realizar_operacion(db=db, tipo_operacion=mvmdetalle.tipo, id_cuenta=id_cuenta,
-                          saldo=mvmdetalle.importe) is False:
-        return {"error": "el tipo de operación no es valida"}
+    operacion = validar_operacion(db=db, tipo_operacion=mvmdetalle.tipo, id_cuenta=id_cuenta, saldo=mvmdetalle.importe)
+    if not operacion:
+        return {"error": "operacion invalida"}
     db_movimiento = models.Movimiento(**mvm.dict(), cuenta_id=id_cuenta)
     db.add(db_movimiento)
     db.commit()
     db.refresh(db_movimiento)
     crear_detalle_a_movimiento(db=db, mvmdetalle=mvmdetalle, id_movimiento=db_movimiento.id)
+    return operacion
 
-    return db_movimiento
+
+def eliminar_movimiento_por_id(db: Session, id_movimiento: int):
+    para_borrar = obtener_movimiento_por_id(db=db, id_movimiento=id_movimiento)
+    db.delete(para_borrar)
+    db.commit()
+    db.refresh(para_borrar)
+    return para_borrar
+
+
+def eliminar_movimiento_detalle_por_id(db: Session, id_movimiento_detalle: int):
+    restaurar_saldo_a_cuenta(db=db, id_movimiento_detalle=id_movimiento_detalle)
+    para_borrar = obtener_movimiento_detalle_por_id(db=db, id_movimiento_detalle=id_movimiento_detalle)
+    db.delete(para_borrar)
+    db.commit()
+    db.refresh(para_borrar)
+    return para_borrar
+
+
+def restaurar_saldo_a_cuenta(db: Session, id_movimiento_detalle: int):
+    movimiento_detalle = obtener_movimiento_detalle_por_id(db=db, id_movimiento_detalle=id_movimiento_detalle)
+    movimiento = obtener_movimiento_por_id(db=db, id_movimiento=movimiento_detalle.movimiento_id)
+    cuenta = obtener_cuenta_por_id(db=db, id_cuenta=movimiento.cuenta_id)
+    print(movimiento_detalle.tipo)
+    print(movimiento.__dict__)
+    print(cuenta.id)
+    time.sleep(10)
+    if movimiento_detalle.tipo.lower() == "egreso":
+        return sumar_saldo_a_cuenta(db=db, id_cuenta=cuenta.id, saldo=movimiento_detalle.importe)
 
 
 # Movimiento Detalles =========================================================

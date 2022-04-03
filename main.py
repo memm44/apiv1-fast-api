@@ -1,6 +1,7 @@
 # python
 # !/usr/bin/env python3
 from typing import List
+import time
 
 # pydantic
 from pydantic import BaseModel
@@ -50,6 +51,12 @@ def listar_todos_los_clientes(skip: int = 0, limit: int = 100, db: Session = Dep
     return users
 
 
+@app.get("/clientes/cuentas", response_model=List[schemas.Cuenta])
+def listar_todos_los_clientes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = op_monetarias.listar_cuentas(db, skip=skip, limit=limit)
+    return users
+
+
 @app.get("/clientes/{user_id}", response_model=schemas.Cliente)
 def obtener_cliente_por_id(user_id: int, db: Session = Depends(get_db)):
     db_user = op_monetarias.obtener_cliente_por_id(db, user_id)
@@ -66,9 +73,9 @@ def eliminar_cliente_por_id(user_id: int, db: Session = Depends(get_db)):
     return {"ok": True}
 
 
-@app.get("/cuentas/")
-def listar_cuentas(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    cuentas = op_monetarias.listar_cuentas(db, skip=skip, limit=limit)
+@app.get("/cuentas/{id_cuenta}")
+def obtener_saldo_cuenta(id_cuenta: int, db: Session = Depends(get_db)):
+    cuentas = op_monetarias.consultar_saldo_de_cuenta_cliente(db=db, id_cuenta=id_cuenta)
     return cuentas
 
 
@@ -104,23 +111,25 @@ def crear_movimiento(id_cuenta: int, mvm: schemas.MovimientoRegister, mvmdetalle
 
 
 # ======================== operaciones saldo ===================================
-@app.post("/cliente/{id_cuenta}/sumar/{saldo}")
-def sumar_saldo_cuenta(id_cuenta: int, saldo: float,
-                       db: Session = Depends(get_db)):
-    cuenta_asociada = op_monetarias.obtener_cuenta_por_id(db, id_cuenta)
-    if not cuenta_asociada:
-        raise HTTPException(status_code=400, detail="este id de cuenta no existe")
-    return op_monetarias.sumar_saldo_a_cuenta(db=db, id_cuenta=id_cuenta, saldo=saldo)
+# @app.post("/cliente/{id_cuenta}/sumar/{saldo}")
+# def sumar_saldo_cuenta(id_cuenta: int, saldo: float,
+#                        db: Session = Depends(get_db)):
+#     cuenta_asociada = op_monetarias.obtener_cuenta_por_id(db, id_cuenta)
+#     if not cuenta_asociada:
+#         raise HTTPException(status_code=400, detail="este id de cuenta no existe")
+#     return op_monetarias.sumar_saldo_a_cuenta(db=db, id_cuenta=id_cuenta, saldo=saldo)
+#
+#
+# @app.post("/cliente/{id_cuenta}/restar/{saldo}")
+# def restar_saldo_cuenta(id_cuenta: int, saldo: float,
+#                         db: Session = Depends(get_db)):
+#     cuenta_asociada = op_monetarias.obtener_cuenta_por_id(db, id_cuenta)
+#     if not cuenta_asociada:
+#         raise HTTPException(status_code=400, detail="este id de cuenta no existe")
+#     return op_monetarias.restar_saldo_a_cuenta(db=db, id_cuenta=id_cuenta, saldo=saldo)
 
 
-@app.post("/cliente/{id_cuenta}/restar/{saldo}")
-def restar_saldo_cuenta(id_cuenta: int, saldo: float,
-                       db: Session = Depends(get_db)):
-    cuenta_asociada = op_monetarias.obtener_cuenta_por_id(db, id_cuenta)
-    if not cuenta_asociada:
-        raise HTTPException(status_code=400, detail="este id de cuenta no existe")
-    return op_monetarias.restar_saldo_a_cuenta(db=db, id_cuenta=id_cuenta, saldo=saldo)
-#=================================================================================
+# =================================================================================
 
 @app.get("/movimientos-detalles/")
 def listar_movimientos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -128,10 +137,19 @@ def listar_movimientos(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     return detalle_movimientos
 
 
-@app.post("/movimientos/{movimiento_id}/detalle", response_model=schemas.MovimientoDetalle)
-def crear_movimiento_detalle(mvm_id: int, mvmdetalle: schemas.MovimientoDetalleRegister,
-                             db: Session = Depends(get_db)):
-    db_mov = op_monetarias.obtener_movimiento_por_id(db, mvm_id)
-    if not db_mov:
-        raise HTTPException(status_code=400, detail="este movimiento no existe")
-    return op_monetarias.crear_detalle_a_movimiento(db=db, id_movimiento=mvm_id, mvmdetalle=mvmdetalle)
+@app.delete("/movimientos-detalles/{id_movimiento_detalle}")
+def eliminar_movimiento_detalle(id_movimiento_detalle: int, db: Session = Depends(get_db)):
+    db_user_deleted = op_monetarias.eliminar_movimiento_detalle_por_id(db=db,
+                                                                       id_movimiento_detalle=id_movimiento_detalle)
+    if db_user_deleted is False:
+        raise HTTPException(status_code=404, detail="Id de movimiento no encontrado")
+
+    return {"detalle": "movimiento eleiminado"}
+
+# @app.post("/movimientos/{movimiento_id}/detalle", response_model=schemas.MovimientoDetalle)
+# def crear_movimiento_detalle(mvm_id: int, mvmdetalle: schemas.MovimientoDetalleRegister,
+#                              db: Session = Depends(get_db)):
+#     db_mov = op_monetarias.obtener_movimiento_por_id(db, mvm_id)
+#     if not db_mov:
+#         raise HTTPException(status_code=400, detail="este movimiento no existe")
+#     return op_monetarias.crear_detalle_a_movimiento(db=db, id_movimiento=mvm_id, mvmdetalle=mvmdetalle)
