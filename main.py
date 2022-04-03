@@ -94,13 +94,13 @@ def listar_movimientos(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     return movimientos
 
 
-@app.post("/cliente/{user_id}/movimientos", response_model=schemas.Movimiento)
-def crear_movimiento(user_id: int, mvm: schemas.MovimientoRegister, mvmdetalle: schemas.MovimientoDetalleRegister,
+@app.post("/cliente/{id_cuenta}/movimientos", response_model=schemas.Movimiento)
+def crear_movimiento(id_cuenta: int, mvm: schemas.MovimientoRegister, mvmdetalle: schemas.MovimientoDetalleRegister,
                      db: Session = Depends(get_db)):
-    db_user = op_monetarias.obtener_cliente_por_id(db, user_id)
-    if not db_user:
-        raise HTTPException(status_code=400, detail="este id de cliente no existe")
-    return op_monetarias.crear_movimiento_a_cliente(db=db, id_cliente=user_id, mvm=mvm, mvmdetalle=mvmdetalle)
+    cuenta_asociada = op_monetarias.obtener_cuenta_por_id(db, id_cuenta)
+    if not cuenta_asociada:
+        raise HTTPException(status_code=400, detail="este id de cuenta no existe")
+    return op_monetarias.crear_movimiento_a_cuenta(db=db, id_cuenta=id_cuenta, mvm=mvm, mvmdetalle=mvmdetalle)
 
 
 @app.get("/movimientos-detalles/")

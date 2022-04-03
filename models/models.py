@@ -12,23 +12,23 @@ class Cliente(Base):
     nombre = Column(String, unique=True, index=True)
     is_active = Column(Boolean, default=True)
     cuentas = relationship("Cuenta", back_populates="cliente")
-    movimientos = relationship("Movimiento", back_populates="cliente")
 
 
 class Cuenta(Base):
     __tablename__ = "cuentas"
     id = Column(Integer, primary_key=True, index=True)
-    saldo_disponible = Column(Float,default=0.0)
+    saldo_disponible = Column(Float, default=0.0)
     cliente_id = Column(Integer, ForeignKey("clientes.id"))
     cliente = relationship("Cliente", back_populates="cuentas")
+    movimientos = relationship("Movimiento", back_populates="cuenta")
 
 
 class Movimiento(Base):
     __tablename__ = "movimientos"
     id = Column(Integer, primary_key=True, index=True)
-    fecha = Column(DateTime, unique=False, index=True,default=datetime.datetime.utcnow())
-    cliente_id = Column(Integer, ForeignKey("clientes.id"))
-    cliente = relationship("Cliente", back_populates="movimientos")
+    fecha = Column(DateTime, unique=False, index=True, default=datetime.datetime.utcnow())
+    cuenta_id = Column(Integer, ForeignKey("cuentas.id"))
+    cuenta = relationship("Cuenta", back_populates="movimientos")
     movimiento_detalles = relationship("MovimientoDetalle", back_populates="movimiento")
 
 

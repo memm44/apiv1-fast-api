@@ -10,7 +10,7 @@ class MovimientoBase(BaseModel):
 
 class Movimiento(MovimientoBase):
     id = int
-    cliente_id = int
+    cuenta_id = int
 
     class Config:
         orm_mode = True
@@ -32,6 +32,7 @@ class CuentaBase(BaseModel):
 class Cuenta(CuentaBase):
     id: int
     cliente_id: int
+    movimientos: List[Movimiento] = []
 
     class Config:
         orm_mode = True
@@ -45,7 +46,6 @@ class Cliente(ClienteBase):
     id: int
     is_active: bool
     cuentas: List[Cuenta] = []
-    movimientos: List[Movimiento] = []
 
     class Config:
         orm_mode = True

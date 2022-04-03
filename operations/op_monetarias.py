@@ -65,9 +65,9 @@ def obtener_cliente_por_nombre(db: Session, nombre_cliente: str):
 # Movimientos =================================================================
 
 
-def crear_movimiento_a_cliente(db: Session, mvm: schemas.MovimientoRegister,
-                               mvmdetalle: schemas.MovimientoDetalleRegister, id_cliente: int):
-    db_movimiento = models.Movimiento(**mvm.dict(), cliente_id=id_cliente)
+def crear_movimiento_a_cuenta(db: Session, mvm: schemas.MovimientoRegister,
+                               mvmdetalle: schemas.MovimientoDetalleRegister, id_cuenta: int):
+    db_movimiento = models.Movimiento(**mvm.dict(), cuenta_id=id_cuenta)
     db.add(db_movimiento)
     db.commit()
     db.refresh(db_movimiento)
