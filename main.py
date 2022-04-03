@@ -94,7 +94,7 @@ def listar_movimientos(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     return movimientos
 
 
-@app.post("/cliente/{id_cuenta}/movimientos", response_model=schemas.Movimiento)
+@app.post("/cliente/{id_cuenta}/movimientos")
 def crear_movimiento(id_cuenta: int, mvm: schemas.MovimientoRegister, mvmdetalle: schemas.MovimientoDetalleRegister,
                      db: Session = Depends(get_db)):
     cuenta_asociada = op_monetarias.obtener_cuenta_por_id(db, id_cuenta)
@@ -102,6 +102,25 @@ def crear_movimiento(id_cuenta: int, mvm: schemas.MovimientoRegister, mvmdetalle
         raise HTTPException(status_code=400, detail="este id de cuenta no existe")
     return op_monetarias.crear_movimiento_a_cuenta(db=db, id_cuenta=id_cuenta, mvm=mvm, mvmdetalle=mvmdetalle)
 
+
+# ======================== operaciones saldo ===================================
+@app.post("/cliente/{id_cuenta}/sumar/{saldo}")
+def sumar_saldo_cuenta(id_cuenta: int, saldo: float,
+                       db: Session = Depends(get_db)):
+    cuenta_asociada = op_monetarias.obtener_cuenta_por_id(db, id_cuenta)
+    if not cuenta_asociada:
+        raise HTTPException(status_code=400, detail="este id de cuenta no existe")
+    return op_monetarias.sumar_saldo_a_cuenta(db=db, id_cuenta=id_cuenta, saldo=saldo)
+
+
+@app.post("/cliente/{id_cuenta}/restar/{saldo}")
+def restar_saldo_cuenta(id_cuenta: int, saldo: float,
+                       db: Session = Depends(get_db)):
+    cuenta_asociada = op_monetarias.obtener_cuenta_por_id(db, id_cuenta)
+    if not cuenta_asociada:
+        raise HTTPException(status_code=400, detail="este id de cuenta no existe")
+    return op_monetarias.restar_saldo_a_cuenta(db=db, id_cuenta=id_cuenta, saldo=saldo)
+#=================================================================================
 
 @app.get("/movimientos-detalles/")
 def listar_movimientos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -116,4 +135,3 @@ def crear_movimiento_detalle(mvm_id: int, mvmdetalle: schemas.MovimientoDetalleR
     if not db_mov:
         raise HTTPException(status_code=400, detail="este movimiento no existe")
     return op_monetarias.crear_detalle_a_movimiento(db=db, id_movimiento=mvm_id, mvmdetalle=mvmdetalle)
-

@@ -50,12 +50,44 @@ def obtener_cuenta_por_id(db: Session, id_cuenta: int):
     return db.query(models.Cuenta).filter(models.Cuenta.id == id_cuenta).first()
 
 
+def sumar_saldo_a_cuenta(db: Session, id_cuenta: int, saldo):
+    cuenta_seleccionada = db.query(models.Cuenta).filter(models.Cuenta.id == id_cuenta).first()
+    cuenta_seleccionada.saldo_disponible += saldo
+    db.commit()
+    db.refresh(cuenta_seleccionada)
+    return {"id_cuenta": id_cuenta, "saldo_agregado": saldo, "detalle": "Operacion exitosa!"}
+
+
+def es_apto_para_debito(db: Session, id_cuenta: int, saldo_a_debitar: float):
+    cuenta_seleccionada = db.query(models.Cuenta).filter(models.Cuenta.id == id_cuenta).first()
+    return saldo_a_debitar <= cuenta_seleccionada.saldo_disponible
+
+
+def restar_saldo_a_cuenta(db: Session, id_cuenta: int, saldo):
+    cuenta_seleccionada = db.query(models.Cuenta).filter(models.Cuenta.id == id_cuenta).first()
+    if not es_apto_para_debito(db=db, id_cuenta=id_cuenta, saldo_a_debitar=saldo):
+        return {"id_cuenta": id_cuenta, "saldo_debitado": 0, "detalle": "Saldo insuficiente!"}
+    cuenta_seleccionada.saldo_disponible -= saldo
+    db.commit()
+    db.refresh(cuenta_seleccionada)
+    return {"id_cuenta": id_cuenta, "saldo_debitado": saldo, "detalle": "Operacion exitosa!"}
+
+
 def crear_cuenta_a_cliente(db: Session, cta: schemas.CuentaRegister, id_cliente: int):
     db_cuenta = models.Cuenta(**cta.dict(), cliente_id=id_cliente)
     db.add(db_cuenta)
     db.commit()
     db.refresh(db_cuenta)
     return db_cuenta
+
+
+def realizar_operacion(db: Session, tipo_operacion: str, id_cuenta: int, saldo: float):
+    if tipo_operacion.lower() == "ingreso":
+        return sumar_saldo_a_cuenta(db=db, id_cuenta=id_cuenta, saldo=saldo)
+    elif tipo_operacion.lower() == "egreso":
+        return restar_saldo_a_cuenta(db=db, id_cuenta=id_cuenta, saldo=saldo)
+    else:
+        return None
 
 
 def obtener_cliente_por_nombre(db: Session, nombre_cliente: str):
@@ -66,7 +98,10 @@ def obtener_cliente_por_nombre(db: Session, nombre_cliente: str):
 
 
 def crear_movimiento_a_cuenta(db: Session, mvm: schemas.MovimientoRegister,
-                               mvmdetalle: schemas.MovimientoDetalleRegister, id_cuenta: int):
+                              mvmdetalle: schemas.MovimientoDetalleRegister, id_cuenta: int):
+    if realizar_operacion(db=db, tipo_operacion=mvmdetalle.tipo, id_cuenta=id_cuenta,
+                          saldo=mvmdetalle.importe) is False:
+        return {"error": "el tipo de operación no es valida"}
     db_movimiento = models.Movimiento(**mvm.dict(), cuenta_id=id_cuenta)
     db.add(db_movimiento)
     db.commit()
