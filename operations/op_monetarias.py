@@ -46,6 +46,10 @@ def listar_cuentas(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Cuenta).offset(skip).limit(limit).all()
 
 
+def obtener_cuenta_por_id(db: Session, id_cuenta: int):
+    return db.query(models.Cuenta).filter(models.Cuenta.id == id_cuenta).first()
+
+
 def crear_cuenta_a_cliente(db: Session, cta: schemas.CuentaRegister, id_cliente: int):
     db_cuenta = models.Cuenta(**cta.dict(), cliente_id=id_cliente)
     db.add(db_cuenta)
@@ -61,11 +65,14 @@ def obtener_cliente_por_nombre(db: Session, nombre_cliente: str):
 # Movimientos =================================================================
 
 
-def crear_movimiento_a_cliente(db: Session, mvm: schemas.MovimientoRegister, id_cliente: int):
+def crear_movimiento_a_cliente(db: Session, mvm: schemas.MovimientoRegister,
+                               mvmdetalle: schemas.MovimientoDetalleRegister, id_cliente: int):
     db_movimiento = models.Movimiento(**mvm.dict(), cliente_id=id_cliente)
     db.add(db_movimiento)
     db.commit()
     db.refresh(db_movimiento)
+    crear_detalle_a_movimiento(db=db, mvmdetalle=mvmdetalle, id_movimiento=db_movimiento.id)
+
     return db_movimiento
 
 
