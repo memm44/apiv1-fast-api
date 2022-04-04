@@ -29,6 +29,4 @@ def test_formato_incorrecto():
     response = client.get('/api/v1/clientes/4d')
     assert response.status_code == 422
 
-def test_crear_cliente_correcto():
-    cliente = client.post('/api/v1/clientes/')
-    
+
