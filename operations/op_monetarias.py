@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 import time
 from models import models
 from schemas import schemas
+from fastapi import HTTPException
 
 
 # Clientes ================================================================
@@ -31,9 +32,9 @@ def obtener_movimiento_detalle_por_id(db: Session, id_movimiento_detalle: int):
 
 def eliminar_cliente_por_id(db: Session, id_cliente: int):
     para_borrar = db.query(models.Cliente).filter(models.Cliente.id == id_cliente).first()
-    db.delete(para_borrar)
-    db.commit()
-    db.refresh(para_borrar)
+    if para_borrar:
+        db.delete(para_borrar)
+        db.commit()
     return para_borrar
 
 
@@ -41,15 +42,16 @@ def eliminar_cliente_por_id(db: Session, id_cliente: int):
 
 def eliminar_cuenta_por_id(db: Session, id_cuenta: int):
     para_borrar = db.query(models.Cuenta).filter(models.Cuenta.id == id_cuenta).first()
-    db.delete(para_borrar)
-    db.commit()
+    if para_borrar:
+        db.delete(para_borrar)
+        db.commit()
     return para_borrar
 
 
 def consultar_saldo_de_cuenta_cliente(db: Session, id_cuenta: int):
     cuenta = obtener_cuenta_por_id(db=db, id_cuenta=id_cuenta)
     return {
-        "saldo_disponible":cuenta.saldo_disponible
+        "saldo_disponible": cuenta.saldo_disponible
     }
 
 
@@ -77,11 +79,11 @@ def es_apto_para_debito(db: Session, id_cuenta: int, saldo_a_debitar: float):
 def restar_saldo_a_cuenta(db: Session, id_cuenta: int, saldo):
     cuenta_seleccionada = db.query(models.Cuenta).filter(models.Cuenta.id == id_cuenta).first()
     if not es_apto_para_debito(db=db, id_cuenta=id_cuenta, saldo_a_debitar=saldo):
-        return {"id_cuenta": id_cuenta, "saldo_debitado": 0, "detalle": "Saldo insuficiente!"}
+        raise HTTPException(status_code=400, detail="el saldo es insuficiente")
     cuenta_seleccionada.saldo_disponible -= saldo
     db.commit()
     db.refresh(cuenta_seleccionada)
-    return {"id_cuenta": id_cuenta, "saldo_debitado": saldo, "detalle": "Operacion exitosa!"}
+    return {"saldo_debitado": saldo, "detalle": "Operacion exitosa!"}
 
 
 def crear_cuenta_a_cliente(db: Session, cta: schemas.CuentaRegister, id_cliente: int):
@@ -125,7 +127,6 @@ def eliminar_movimiento_por_id(db: Session, id_movimiento: int):
     para_borrar = obtener_movimiento_por_id(db=db, id_movimiento=id_movimiento)
     db.delete(para_borrar)
     db.commit()
-    db.refresh(para_borrar)
     return para_borrar
 
 
@@ -134,7 +135,6 @@ def eliminar_movimiento_detalle_por_id(db: Session, id_movimiento_detalle: int):
     para_borrar = obtener_movimiento_detalle_por_id(db=db, id_movimiento_detalle=id_movimiento_detalle)
     db.delete(para_borrar)
     db.commit()
-    db.refresh(para_borrar)
     return para_borrar
 
 
@@ -146,8 +146,9 @@ def restaurar_saldo_a_cuenta(db: Session, id_movimiento_detalle: int):
     print(movimiento.__dict__)
     print(cuenta.id)
     time.sleep(10)
-    if movimiento_detalle.tipo.lower() == "egreso":
-        return sumar_saldo_a_cuenta(db=db, id_cuenta=cuenta.id, saldo=movimiento_detalle.importe)
+    if movimiento:
+        if movimiento_detalle.tipo.lower() == "egreso":
+            return sumar_saldo_a_cuenta(db=db, id_cuenta=cuenta.id, saldo=movimiento_detalle.importe)
 
 
 # Movimiento Detalles =========================================================

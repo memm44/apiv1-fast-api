@@ -1,5 +1,4 @@
 import datetime
-
 from database import Base
 from sqlalchemy import Column, Boolean, ForeignKey, Integer, String, Float, DateTime
 from sqlalchemy.orm import relationship
@@ -38,4 +37,5 @@ class MovimientoDetalle(Base):
     movimiento_id = Column(Integer, ForeignKey("movimientos.id"))
     tipo = Column(String, unique=False, index=False)
     importe = Column(Float)
-    movimiento = relationship("Movimiento", back_populates="movimiento_detalles",overlaps="parent")
+    movimiento = relationship("Movimiento", back_populates="movimiento_detalles", overlaps="parent")
+
