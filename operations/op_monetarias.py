@@ -30,6 +30,14 @@ def obtener_movimiento_detalle_por_id(db: Session, id_movimiento_detalle: int):
     return db.query(models.MovimientoDetalle).filter(models.MovimientoDetalle.id == id_movimiento_detalle).first()
 
 
+def actualizar_cliente(db: Session, nombre_nuevo:str, cliente_id: int):
+    cliente = obtener_cliente_por_id(db=db, id_cliente=cliente_id)
+    cliente.nombre= nombre_nuevo
+    db.add(cliente)
+    db.commit()
+    return cliente
+
+
 def eliminar_cliente_por_id(db: Session, id_cliente: int):
     para_borrar = db.query(models.Cliente).filter(models.Cliente.id == id_cliente).first()
     if para_borrar:

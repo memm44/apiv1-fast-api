@@ -20,6 +20,7 @@ class MovimientoDetalleBase(BaseModel):
     importe: float
 
 
+
 class MovimientoDetalle(MovimientoDetalleBase):
     movimiento_id = int
 
@@ -43,7 +44,6 @@ class ClienteBase(BaseModel):
 
 class Cliente(ClienteBase):
     id: int
-    is_active: bool
     cuentas: List[Cuenta] = []
 
     class Config:

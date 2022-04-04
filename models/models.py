@@ -9,7 +9,6 @@ class Cliente(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String, unique=True, index=True)
-    is_active = Column(Boolean, default=True)
     cuentas = relationship("Cuenta", back_populates="cliente")
 
 
