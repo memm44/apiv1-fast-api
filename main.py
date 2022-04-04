@@ -38,8 +38,8 @@ async def listar_todos_los_clientes(skip: int = 0, limit: int = 100, db: Session
 
 @app.get("/api/v1/clientes/cuentas", status_code=status.HTTP_200_OK, response_model=List[schemas.Cuenta])
 async def listar_todos_las_cuentas(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    users = op_monetarias.listar_cuentas(db, skip=skip, limit=limit)
-    return users
+    cuentas = op_monetarias.listar_cuentas(db, skip=skip, limit=limit)
+    return cuentas
 
 
 @app.get("/api/v1/clientes/{user_id}", status_code=status.HTTP_200_OK, response_model=schemas.Cliente)
@@ -96,7 +96,7 @@ async def listar_movimientos(skip: int = 0, limit: int = 100, db: Session = Depe
     return movimientos
 
 
-@app.get("/api/v1/movimientos-detalles/", status_code=status.HTTP_200_OK)
+@app.get("/api/v1/movimiento-detalle/", status_code=status.HTTP_200_OK)
 async def listar_detalles_movimiento(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     detalle_movimientos = op_monetarias.listar_detalle_movimientos(db, skip=skip, limit=limit)
     return detalle_movimientos
@@ -118,7 +118,7 @@ async def eliminar_cuenta_por_id(user_id: int, db: Session = Depends(get_db)):
     return {"mensaje": f"cuenta eliminada correctamente"}
 
 
-@app.delete("/api/v1/movimientos-detalles/{id_movimiento_detalle}", status_code=status.HTTP_200_OK)
+@app.delete("/api/v1/movimiento-detalles/{id_movimiento_detalle}", status_code=status.HTTP_200_OK)
 async def eliminar_movimiento_detalle(id_movimiento_detalle: int, db: Session = Depends(get_db)):
     db_user_deleted = op_monetarias.eliminar_movimiento_detalle_por_id(db=db,
                                                                        id_movimiento_detalle=id_movimiento_detalle)

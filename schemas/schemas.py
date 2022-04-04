@@ -20,7 +20,6 @@ class MovimientoDetalleBase(BaseModel):
     importe: float
 
 
-
 class MovimientoDetalle(MovimientoDetalleBase):
     movimiento_id = int
 
@@ -30,7 +29,7 @@ class CuentaBase(BaseModel):
 
 
 class Cuenta(CuentaBase):
-    id: int
+    id: Optional[int]
     cliente_id: int
     movimientos: List[Movimiento] = []
 
@@ -43,8 +42,12 @@ class ClienteBase(BaseModel):
 
 
 class Cliente(ClienteBase):
-    id: int
+    id: Optional[int]
     cuentas: List[Cuenta] = []
+
+    def saludar(self):
+        print("hola")
+        return "hola"
 
     class Config:
         orm_mode = True

@@ -3,6 +3,7 @@ import time
 from models import models
 from schemas import schemas
 from fastapi import HTTPException
+from .client_service import CotizadorDolarsiJson
 
 
 # Clientes ================================================================
@@ -30,9 +31,9 @@ def obtener_movimiento_detalle_por_id(db: Session, id_movimiento_detalle: int):
     return db.query(models.MovimientoDetalle).filter(models.MovimientoDetalle.id == id_movimiento_detalle).first()
 
 
-def actualizar_cliente(db: Session, nombre_nuevo:str, cliente_id: int):
+def actualizar_cliente(db: Session, nombre_nuevo: str, cliente_id: int):
     cliente = obtener_cliente_por_id(db=db, id_cliente=cliente_id)
-    cliente.nombre= nombre_nuevo
+    cliente.nombre = nombre_nuevo
     db.add(cliente)
     db.commit()
     return cliente
@@ -57,9 +58,13 @@ def eliminar_cuenta_por_id(db: Session, id_cuenta: int):
 
 
 def consultar_saldo_de_cuenta_cliente(db: Session, id_cuenta: int):
-    cuenta = obtener_cuenta_por_id(db=db, id_cuenta=id_cuenta)
+    saldo = obtener_cuenta_por_id(db=db, id_cuenta=id_cuenta).saldo_disponible
+    cotizador = CotizadorDolarsiJson(tipo_dolar="Dolar Bolsa")
     return {
-        "saldo_disponible": cuenta.saldo_disponible
+        "saldo_disponible": saldo,
+        "saldo_dolar_venta": saldo / cotizador.obtener_precio_venta(),
+        "saldo_dolar_compra": saldo / cotizador.obtener_precio_compra(),
+
     }
 
 
