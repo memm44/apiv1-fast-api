@@ -5,7 +5,6 @@ from typing import List
 from sqlalchemy.orm import Session
 # fastapi
 from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.encoders import jsonable_encoder
 from database import SessionLocal, engine
 from models import models
 from schemas import schemas
@@ -64,7 +63,7 @@ async def crear_cliente(cliente: schemas.ClientRegister, db: Session = Depends(g
     return op_monetarias.crear_cliente(db=db, cliente=cliente)
 
 
-@app.post("/api/v1/clientes/{user_id}/cuentas", response_model=schemas.Cuenta, status_code=status.HTTP_200_OK)
+@app.post("/api/v1/clientes/{cliente_id}/cuentas", response_model=schemas.Cuenta, status_code=status.HTTP_201_CREATED)
 async def crear_cuenta(cliente_id: int, cta: schemas.CuentaRegister, db: Session = Depends(get_db)):
     db_user = op_monetarias.obtener_cliente_por_id(db, cliente_id)
     if not db_user:
@@ -110,9 +109,9 @@ async def eliminar_cliente_por_id(user_id: int, db: Session = Depends(get_db)):
     return {"mensaje": f"cliente eliminado correctamente"}
 
 
-@app.delete("/api/v1/cuentas/{user_id}", status_code=status.HTTP_200_OK)
+@app.delete("/api/v1/cuentas/{cliente_id}", status_code=status.HTTP_200_OK)
 async def eliminar_cuenta_por_id(user_id: int, db: Session = Depends(get_db)):
-    db_user_deleted = op_monetarias.eliminar_cuenta_por_id(db, user_id)
+    db_user_deleted = op_monetarias.eliminar_cuenta_por_id(db, cliente_id)
     if not db_user_deleted:
         raise HTTPException(status_code=404, detail="Este id de usuario no esta registrado")
     return {"mensaje": f"cuenta eliminada correctamente"}
