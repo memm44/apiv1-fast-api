@@ -67,7 +67,7 @@ async def crear_cliente(cliente: schemas.ClientRegister, db: Session = Depends(g
 async def crear_cuenta(cliente_id: int, cta: schemas.CuentaRegister, db: Session = Depends(get_db)):
     db_user = op_monetarias.obtener_cliente_por_id(db, cliente_id)
     if not db_user:
-        raise HTTPException(status_code=400, detail="este id de cliente no existe")
+        raise HTTPException(status_code=404, detail="este id de cliente no existe")
     return op_monetarias.crear_cuenta_a_cliente(db=db, id_cliente=cliente_id, cta=cta)
 
 
@@ -77,7 +77,7 @@ async def crear_movimiento(id_cuenta: int, mvm: schemas.MovimientoRegister,
                            db: Session = Depends(get_db)):
     cuenta_asociada = op_monetarias.obtener_cuenta_por_id(db, id_cuenta)
     if not cuenta_asociada:
-        raise HTTPException(status_code=400, detail="este id de cuenta no existe")
+        raise HTTPException(status_code=404, detail="este id de cuenta no existe")
     return op_monetarias.crear_movimiento_a_cuenta(db=db, id_cuenta=id_cuenta, mvm=mvm, mvmdetalle=mvmdetalle)
 
 
@@ -85,7 +85,7 @@ async def crear_movimiento(id_cuenta: int, mvm: schemas.MovimientoRegister,
 async def actualizar_cliente_por_id(cliente_id: int, nombre: str, db: Session = Depends(get_db)):
     db_user = op_monetarias.obtener_cliente_por_id(db, cliente_id)
     if not db_user:
-        raise HTTPException(status_code=400, detail="este id de cliente no existe")
+        raise HTTPException(status_code=404, detail="este id de cliente no existe")
     return op_monetarias.actualizar_cliente(db=db,nombre_nuevo=nombre,cliente_id=cliente_id)
 
 
@@ -109,11 +109,11 @@ async def eliminar_cliente_por_id(user_id: int, db: Session = Depends(get_db)):
     return {"mensaje": f"cliente eliminado correctamente"}
 
 
-@app.delete("/api/v1/cuentas/{cliente_id}", status_code=status.HTTP_200_OK)
-async def eliminar_cuenta_por_id(user_id: int, db: Session = Depends(get_db)):
-    db_user_deleted = op_monetarias.eliminar_cuenta_por_id(db, cliente_id)
+@app.delete("/api/v1/cuentas/{cuenta_id}", status_code=status.HTTP_200_OK)
+async def eliminar_cuenta_por_id(cuenta_id: int, db: Session = Depends(get_db)):
+    db_user_deleted = op_monetarias.eliminar_cuenta_por_id(db=db,id_cuenta=cuenta_id)
     if not db_user_deleted:
-        raise HTTPException(status_code=404, detail="Este id de usuario no esta registrado")
+        raise HTTPException(status_code=404, detail="Este id de cuenta no esta registrado")
     return {"mensaje": f"cuenta eliminada correctamente"}
 
 

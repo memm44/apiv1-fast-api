@@ -101,6 +101,8 @@ def restar_saldo_a_cuenta(db: Session, id_cuenta: int, saldo):
 
 def crear_cuenta_a_cliente(db: Session, cta: schemas.CuentaRegister, id_cliente: int):
     db_cuenta = models.Cuenta(**cta.dict(), cliente_id=id_cliente)
+    if cta.saldo_disponible < 0:
+        raise HTTPException(status_code=400, detail="saldo incorrecto")
     db.add(db_cuenta)
     db.commit()
     db.refresh(db_cuenta)
